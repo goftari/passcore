@@ -23,6 +23,7 @@ public static class PwnedSearch
         {
             SHA1 sha = new SHA1CryptoServiceProvider();
             byte[] data = sha.ComputeHash(Encoding.UTF8.GetBytes(plaintext));
+            var proxyUrl = Configuration["Proxy:Url"];
 
             // Loop through each byte of the hashed data and format each one as a hexadecimal string.
             var sBuilder = new StringBuilder();
@@ -34,6 +35,11 @@ public static class PwnedSearch
             // Get a list of all the possible password hashes where the first 5 bytes of the hash are the same
             var url = $"https://api.pwnedpasswords.com/range/{result[..5]}";
             WebRequest request = WebRequest.Create(url);
+            if (!string.IsNullOrEmpty(proxyUrl))
+            {
+                WebProxy proxy = new WebProxy(proxyUrl);
+                request.Proxy = proxy;
+            }
             using var response = request.GetResponse().GetResponseStream();
             using var reader = new StreamReader(response);
             // Iterate through all possible matches and compare the rest of the hash to see if there is a full match
